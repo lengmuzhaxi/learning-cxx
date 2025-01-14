@@ -9,19 +9,28 @@
 // 因此必须提供构造器来初始化字段。
 // READ: 构造器 <https://zh.cppreference.com/w/cpp/language/constructor>
 class Fibonacci {
-    size_t cache[16];
-    int cached;
+    size_t cache[16];  // 缓存数组，最多存储16个斐波那契数
+    int cached;        // 当前缓存的最大索引
 
 public:
-    // TODO: 实现构造器
-    // Fibonacci()
-
-    // TODO: 实现正确的缓存优化斐波那契计算
-    size_t get(int i) {
-        for (; false; ++cached) {
-            cache[cached] = cache[cached - 1] + cache[cached - 2];
+    // 构造器
+    Fibonacci() : cached(1) {
+        cache[0] = 0;  // 初始化 Fibonacci(0)
+        cache[1] = 1;  // 初始化 Fibonacci(1)
+        for (int i = 2; i < 16; ++i) {
+            cache[i] = 0;  // 初始化其余值为 0 表示未计算
         }
-        return cache[i];
+    }
+    // 缓存优化的斐波那契计算
+    size_t get(int i) {
+        // 如果缓存未命中，则计算并存储
+        for (int j = 2; j <= i; ++j) {
+            if (cache[j] == 0) {  // 仅当值未被缓存时计算
+                cache[j] = cache[j - 1] + cache[j - 2];
+            }
+        }
+
+        return cache[i];  // 返回缓存值
     }
 };
 
