@@ -1,4 +1,5 @@
 ﻿#include "../exercise.h"
+#include<cstring>
 
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
@@ -10,6 +11,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for (int i = 0; i < 4; ++i) {
+            shape[i] = shape_[i];
+            size *= shape_[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +33,47 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+
+        unsigned int this_size = 1;
+        unsigned int others_size = 1;
+        unsigned int this_stride[4] = {1, 1, 1, 1};
+        unsigned int others_stride[4] = {1, 1, 1, 1};
+
+        // 计算形状对应的步长
+        for (int i = 3; i >= 0; --i) {
+            if (i < 3) {
+                this_stride[i] = this_stride[i + 1] * shape[i + 1];
+                others_stride[i] = others_stride[i + 1] * others.shape[i + 1];
+            }
+            this_size *= shape[i];
+            others_size *= others.shape[i];
+        }
+
+        // 遍历每个元素并进行广播加法
+        for (unsigned int i = 0; i < this_size; ++i) {
+            unsigned int this_index[4] = {
+                (i / this_stride[0]) % shape[0],
+                (i / this_stride[1]) % shape[1],
+                (i / this_stride[2]) % shape[2],
+                (i / this_stride[3]) % shape[3]
+            };
+
+            unsigned int others_index[4] = {
+                (others.shape[0] == 1 ? 0 : this_index[0]),
+                (others.shape[1] == 1 ? 0 : this_index[1]),
+                (others.shape[2] == 1 ? 0 : this_index[2]),
+                (others.shape[3] == 1 ? 0 : this_index[3])
+            };
+
+            unsigned int others_flat_index =
+                others_index[0] * others_stride[0] +
+                others_index[1] * others_stride[1] +
+                others_index[2] * others_stride[2] +
+                others_index[3] * others_stride[3];
+
+            data[i] += others.data[others_flat_index];
+        }
+
         return *this;
     }
 };
